@@ -5,6 +5,11 @@ from helpers import *
 
 app = FastAPI()
 
+@app.get("/")
+def updatePasswordAdmin():
+    return ("Hello, welcome to Password API in Python. This API allows you to store and retrieve passwords" +
+            " using a REST API. The default password to do any REST API operations is ADMIN or ADMIN1, please be sure" +
+            " to change it as soon as you setup.")
 
 # Returns the hash of the current Password admin password 
 def currentPasswordAdminPassword(passwordToCheck):
