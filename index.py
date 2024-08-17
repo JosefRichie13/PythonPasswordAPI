@@ -26,6 +26,7 @@ class updatePasswordAdminData(BaseModel):
     newPassword : str
     
 
+
 # Updates the Password of the Password Admin
 @app.put("/updatePasswordAdmin")
 def updatePasswordAdmin(updatePasswordAdminBody: updatePasswordAdminData, response:Response):
@@ -59,16 +60,23 @@ def updatePasswordAdmin(updatePasswordAdminBody: updatePasswordAdminData, respon
 
 
 
-# Body for POST AND PUT
+# Body for POST
 class addLoginData(BaseModel):
     adminPassword : str
     domain : str
     userID : str
     password: str
 
+# Body for PUT
+class updateLoginData(BaseModel):
+    adminPassword : str
+    userID : str
+    password: str
+
 # Body for GET and DELETE 
 class getLoginData(BaseModel):
     adminPassword : str
+
 
 
 # Adds a Login detail record
@@ -134,7 +142,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
         # Else, reject with a 404
         if existingDomainCheck is not None:
             decryptedPassword = decryptAPassword(existingDomainCheck[0], existingDomainCheck[3], existingDomainCheck[4])
-            return {"Password" : decryptedPassword, "Domain": domain}
+            return {"password" : decryptedPassword, "domain": domain}
         else:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"status" : "There is no record for " + domain + ". Please recheck"}
@@ -168,7 +176,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
         # Else, reject with a 404
         if existingDomainCheck is not None:
             decryptedUserID = decryptAUserID(existingDomainCheck[0], existingDomainCheck[2], existingDomainCheck[4])
-            return {"UserID" : decryptedUserID, "Domain": domain}
+            return {"userID" : decryptedUserID, "domain": domain}
         else:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"status" : "There is no record for " + domain + ". Please recheck"}
@@ -203,7 +211,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
         if existingDomainCheck is not None:
             decryptedUserID = decryptAUserID(existingDomainCheck[0], existingDomainCheck[2], existingDomainCheck[4])
             decryptedPassword = decryptAPassword(existingDomainCheck[0], existingDomainCheck[3], existingDomainCheck[4])
-            return {"UserID" : decryptedUserID, "Password" : decryptedPassword, "Domain" : domain}
+            return {"userID" : decryptedUserID, "password" : decryptedPassword, "domain" : domain}
         else:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"status" : "There is no record for " + domain + ". Please recheck"}
@@ -211,3 +219,48 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
     # If the Admin password is wrong reject with 403 
     response.status_code = status.HTTP_403_FORBIDDEN
     return {"status" : "Your admin password is incorrect. Please recheck"}
+
+
+
+# Updates a Login detail (UserID and/or Password) record
+@app.put("/updateCredentials")
+def updateTheLoginDetails(domain: str, updateLoginBody: updateLoginData, response: Response):
+
+    putConnection = sqlite3.connect("PASSWORDDB.db")
+    cur = putConnection.cursor()
+
+    # Gets the current password stored as a hash from the DB
+    queryToCheckAdminPassword = "SELECT PASSWORD FROM PASSWORDDB WHERE USERID = 'PASSWORDADMIN' AND DOMAIN = 'PASSWORDADMIN' AND ID = 'PASSWORDADMIN'"
+    adminPasswordCheck = cur.execute(queryToCheckAdminPassword).fetchone()
+
+    # Checks if the current password's hash is the same as the one stored
+    if currentPasswordAdminPassword(updateLoginBody.adminPassword) == adminPasswordCheck[0]:
+
+        # If the Admin password is correct, it checks if the supplied domain exists in the DB 
+        queryToCheckExistingDomain = "SELECT * FROM PASSWORDDB WHERE DOMAIN = ?"
+        valueToCheckExistingDomain = [domain]
+        existingDomainCheck = cur.execute(queryToCheckExistingDomain, valueToCheckExistingDomain).fetchone()
+
+        # If the supplied domain exists in the DB, update the credentials (UserID and Password)
+        # Else, reject with a 404
+        if existingDomainCheck is not None:
+
+            generatedIDForLogin = generateID()
+            generatedTimestamp = currentEpochTime()
+            encryptedUserID = encryptAUserID(generatedIDForLogin, updateLoginBody.userID, generatedTimestamp)
+            encryptedPassword = encryptAPassword(generatedIDForLogin, updateLoginBody.password, generatedTimestamp)
+
+            queryToUpdateALogin = "UPDATE PASSWORDDB SET ID = ?, USERID = ?,  PASSWORD = ?, TIMESTAMP = ? WHERE DOMAIN = ?"
+            valuesToUpdateALogin = (generatedIDForLogin, encryptedUserID, encryptedPassword, generatedTimestamp, domain)
+            cur.execute(queryToUpdateALogin, valuesToUpdateALogin)
+            putConnection.commit()
+
+            return {"status" : "Credentials updated for " + domain}
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"status" : "There is no record for " + domain + ". Please recheck"}
+    
+    # If the Admin password is wrong reject with 403 
+    response.status_code = status.HTTP_403_FORBIDDEN
+    return {"status" : "Your admin password is incorrect. Please recheck"}
+
