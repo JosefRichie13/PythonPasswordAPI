@@ -155,7 +155,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
 
 # Retrieves the UserID by the Domain
 @app.post("/getUserID")
-def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Response):
+def getUserIDByDomain(domain: str, getLoginBody: getLoginData, response: Response):
 
     getConnection = sqlite3.connect("PASSWORDDB.db")
     cur = getConnection.cursor()
@@ -189,7 +189,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
 
 # Retrieves the Crendentials (UserID and Password) by the Domain
 @app.post("/getCredentials")
-def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Response):
+def getCredentialsdByDomain(domain: str, getLoginBody: getLoginData, response: Response):
 
     getConnection = sqlite3.connect("PASSWORDDB.db")
     cur = getConnection.cursor()
@@ -224,7 +224,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
 
 # Retrieves all the available crendentials (UserID and Password)
 @app.post("/getAllCredentials")
-def getPasswordByDomain(getLoginBody: getLoginData, response: Response):
+def getAllCredentials(getLoginBody: getLoginData, response: Response):
 
     getConnection = sqlite3.connect("PASSWORDDB.db")
     cur = getConnection.cursor()
@@ -244,7 +244,7 @@ def getPasswordByDomain(getLoginBody: getLoginData, response: Response):
         for ID, DOMAIN, USERID, PASSWORD, TIMESTAMP in allCredentials:
             decryptedUserID = decryptAUserID(ID, USERID, TIMESTAMP)
             decryptedPassword = decryptAPassword(ID, PASSWORD, TIMESTAMP)
-            formattedCredentials.append({"domain": DOMAIN, "userID": decryptedUserID, "password": decryptedPassword})
+            formattedCredentials.append({"userID": decryptedUserID, "password": decryptedPassword, "domain": DOMAIN})
 
         return formattedCredentials
 
@@ -300,7 +300,7 @@ def updateTheLoginDetails(domain: str, updateLoginBody: updateLoginData, respons
 
 # Deletes a Login detail record
 @app.delete("/deleteCredentials")
-def updateTheLoginDetails(domain: str, getLoginBody: getLoginData, response: Response):
+def deleteTheLoginDetails(domain: str, getLoginBody: getLoginData, response: Response):
 
     delConnection = sqlite3.connect("PASSWORDDB.db")
     cur = delConnection.cursor()
