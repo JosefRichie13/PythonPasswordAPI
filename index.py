@@ -120,7 +120,7 @@ def addALoginDetail(addLoginBody: addLoginData, response: Response):
 
 
 # Retrieves the password by the Domain
-@app.get("/getPassword")
+@app.post("/getPassword")
 def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Response):
 
     getConnection = sqlite3.connect("PASSWORDDB.db")
@@ -154,7 +154,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
 
 
 # Retrieves the UserID by the Domain
-@app.get("/getUserID")
+@app.post("/getUserID")
 def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Response):
 
     getConnection = sqlite3.connect("PASSWORDDB.db")
@@ -188,7 +188,7 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
 
 
 # Retrieves the Crendentials (UserID and Password) by the Domain
-@app.get("/getCredentials")
+@app.post("/getCredentials")
 def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Response):
 
     getConnection = sqlite3.connect("PASSWORDDB.db")
@@ -215,6 +215,38 @@ def getPasswordByDomain(domain: str, getLoginBody: getLoginData, response: Respo
         else:
             response.status_code = status.HTTP_404_NOT_FOUND
             return {"status" : "There is no record for " + domain + ". Please recheck"}
+
+    # If the Admin password is wrong reject with 403 
+    response.status_code = status.HTTP_403_FORBIDDEN
+    return {"status" : "Your admin password is incorrect. Please recheck"}
+
+
+
+# Retrieves all the available crendentials (UserID and Password)
+@app.post("/getAllCredentials")
+def getPasswordByDomain(getLoginBody: getLoginData, response: Response):
+
+    getConnection = sqlite3.connect("PASSWORDDB.db")
+    cur = getConnection.cursor()
+
+    # Gets the current password stored as a hash from the DB
+    queryToCheckAdminPassword = "SELECT PASSWORD FROM PASSWORDDB WHERE USERID = 'PASSWORDADMIN' AND DOMAIN = 'PASSWORDADMIN' AND ID = 'PASSWORDADMIN'"
+    adminPasswordCheck = cur.execute(queryToCheckAdminPassword).fetchone()
+
+    # Checks if the current password's hash is the same as the one stored
+    if currentPasswordAdminPassword(getLoginBody.adminPassword) == adminPasswordCheck[0]:
+
+        # If the Admin password is correct, gets all the domains from the DB and returns it
+        queryToGetAllCredentials = "SELECT ID, DOMAIN, USERID, PASSWORD, TIMESTAMP FROM PASSWORDDB WHERE ID IS NOT 'PASSWORDADMIN' AND DOMAIN IS NOT 'PASSWORDADMIN' AND USERID IS NOT 'PASSWORDADMIN'"
+        allCredentials = cur.execute(queryToGetAllCredentials).fetchall()
+
+        formattedCredentials = []
+        for ID, DOMAIN, USERID, PASSWORD, TIMESTAMP in allCredentials:
+            decryptedUserID = decryptAUserID(ID, USERID, TIMESTAMP)
+            decryptedPassword = decryptAPassword(ID, PASSWORD, TIMESTAMP)
+            formattedCredentials.append({"domain": DOMAIN, "userID": decryptedUserID, "password": decryptedPassword})
+
+        return formattedCredentials
 
     # If the Admin password is wrong reject with 403 
     response.status_code = status.HTTP_403_FORBIDDEN
