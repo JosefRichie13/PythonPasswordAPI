@@ -264,3 +264,41 @@ def updateTheLoginDetails(domain: str, updateLoginBody: updateLoginData, respons
     response.status_code = status.HTTP_403_FORBIDDEN
     return {"status" : "Your admin password is incorrect. Please recheck"}
 
+
+
+# Deletes a Login detail record
+@app.delete("/deleteCredentials")
+def updateTheLoginDetails(domain: str, getLoginBody: getLoginData, response: Response):
+
+    delConnection = sqlite3.connect("PASSWORDDB.db")
+    cur = delConnection.cursor()
+
+    # Gets the current password stored as a hash from the DB
+    queryToCheckAdminPassword = "SELECT PASSWORD FROM PASSWORDDB WHERE USERID = 'PASSWORDADMIN' AND DOMAIN = 'PASSWORDADMIN' AND ID = 'PASSWORDADMIN'"
+    adminPasswordCheck = cur.execute(queryToCheckAdminPassword).fetchone()
+
+    # Checks if the current password's hash is the same as the one stored
+    if currentPasswordAdminPassword(getLoginBody.adminPassword) == adminPasswordCheck[0]:
+
+        # If the Admin password is correct, it checks if the supplied domain exists in the DB 
+        queryToCheckExistingDomain = "SELECT * FROM PASSWORDDB WHERE DOMAIN = ?"
+        valueToCheckExistingDomain = [domain]
+        existingDomainCheck = cur.execute(queryToCheckExistingDomain, valueToCheckExistingDomain).fetchone()
+
+        # If the supplied domain exists in the DB, deletes the record
+        # Else, reject with a 404
+        if existingDomainCheck is not None:
+
+            queryToDeleteALogin = "DELETE FROM PASSWORDDB WHERE DOMAIN = ?"
+            valueToDeleteALogin = [domain]
+            cur.execute(queryToDeleteALogin, valueToDeleteALogin)
+            delConnection.commit()
+
+            return {"status" : "Credentials for " + domain + " are deleted"}
+        else:
+            response.status_code = status.HTTP_404_NOT_FOUND
+            return {"status" : "There is no record for " + domain + ". Please recheck"}
+    
+    # If the Admin password is wrong reject with 403 
+    response.status_code = status.HTTP_403_FORBIDDEN
+    return {"status" : "Your admin password is incorrect. Please recheck"}
