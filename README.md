@@ -1,7 +1,6 @@
 # Backend for a Password Manager App using FastAPI, SQLite and Python
 
-This repo has the code for a Password Manager App Backend. It exposes the below REST API endpoints. This app allows you to store passwords, which are fully encrypted in the Database. To access any of the below endpoint the Admin password must be used, the default password 
-is ADMIN or ADMIN1, please be sure to change it as soon as you setup.
+This repo has the code for a Password Manager App Backend. This app allows you to manage passwords, which are fully encrypted in the Database. To access any of the below endpoint the Admin password must be used, the default password is ADMIN or ADMIN1, please be sure to change it as soon as you setup. It exposes the below REST API endpoints.
 
 * PUT /updatePasswordAdmin
   
@@ -96,6 +95,7 @@ is ADMIN or ADMIN1, please be sure to change it as soon as you setup.
   > ```
   
 * DELETE /deleteCredentials
+  
   > This endpoint allows you to delete the entry for a Domain from the Database. It requires a query param to be sent.<br><br>
   > The Query Parameter is
   > ```
