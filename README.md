@@ -1,6 +1,6 @@
-# Backend for a Password saver App using FastAPI, SQLite and Python
+# Backend for a Password Manager App using FastAPI, SQLite and Python
 
-This repo has the code for a Password saver App Backend. It exposes the below REST API endpoints. This app allows you to store passwords, which are fully encrypted in the Database. To access any of the below endpoint the Admin password must be used, the default password 
+This repo has the code for a Password Manager App Backend. It exposes the below REST API endpoints. This app allows you to store passwords, which are fully encrypted in the Database. To access any of the below endpoint the Admin password must be used, the default password 
 is ADMIN or ADMIN1, please be sure to change it as soon as you setup.
 
 * PUT /updatePasswordAdmin
