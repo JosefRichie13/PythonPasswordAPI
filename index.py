@@ -2,13 +2,13 @@ import sqlite3
 from fastapi import FastAPI, Response, status
 from pydantic import BaseModel
 from helpers import *
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 
 @app.get("/")
 def landingPage():
-    return ("Hello, welcome to Password API in Python. The default password to do any REST API operations"
-            " is ADMIN or ADMIN1, please be sure to change it as soon as you setup.")
+    return FileResponse("Password.html")
 
 # Returns the hash of the current Password admin password 
 def currentPasswordAdminPassword(passwordToCheck):
